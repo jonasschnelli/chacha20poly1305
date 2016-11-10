@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 struct chacha20_testvector {
   uint8_t key[32];
@@ -95,9 +96,9 @@ static const struct chacha20_testvector chacha20_testvectors[] = {
 
 int main(void) {
   struct chacha_ctx ctx;
-  u_char iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   unsigned int i = 0;
-  u_char keystream[512];
+  uint8_t keystream[512];
   for (i = 0;
        i < (sizeof(chacha20_testvectors) / sizeof(chacha20_testvectors[0]));
        i++) {

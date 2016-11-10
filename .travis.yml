@@ -1,0 +1,42 @@
+language: c
+os:
+    - osx
+    - linux
+
+compiler:
+    - clang
+    - gcc
+    - x86_64-w64-mingw32-gcc
+
+addons:
+  apt:
+    packages:
+        - valgrind
+        - binutils-mingw-w64
+        - gcc-mingw-w64
+        - wine
+
+before_install:
+    - pip install --user cpp-coveralls
+    - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install valgrind gnu-sed --default-names; fi
+
+matrix:
+    fast_finish:
+      - true
+    exclude:
+      - os: osx
+        compiler: x86_64-w64-mingw32-gcc
+
+script: 
+    - $CC -O0 -g chacha.c tests.c -o test
+    - if ( [ "${TRAVIS_OS_NAME}" == "linux" ] ) && ( [ "$CC" == "gcc" ] ); then
+          valgrind --track-origins=yes --leak-check=full --error-exitcode=1 ./test;
+          ./test;
+      else
+          if ( [ "$CC" == x86_64-w64-mingw32-gcc ] ) || ( [ "$CC" == i686-w64-mingw32-gcc ] ); then
+             ls -la;
+             ./test;
+          else
+             ./test;
+          fi
+      fi
