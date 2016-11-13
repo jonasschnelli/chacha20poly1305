@@ -67,21 +67,17 @@ int timingsafe_bcmp(const void *b1, const void *b2, size_t n) {
 
 #endif /* TIMINGSAFE_BCMP */
 
-#ifdef HAVE_MEMSET_S
-
-void explicit_bzero(void *p, size_t n) { (void)memset_s(p, n, 0, n); }
-
-#else /* no memset_s available */
-
-static void (*volatile mem_bzero)(void *, size_t) = bzero;
-void explicit_bzero(void *p, size_t n) {
+#ifndef HAVE_MEMSET_S
+void memory_cleanse(void *p, size_t n) {
 #if defined(__has_feature)
 #if __has_feature(memory_sanitizer)
   memset(p, 0, n);
 #endif
 #endif
-  mem_bzero(p, n);
 }
+
+#else /* no memset_s available */
+void memory_cleanse(void *p, size_t n) { (void)memset_s(p, n, 0, n); }
 #endif
 
 int chacha20poly1305_init(struct chachapolyaead_ctx *ctx, const uint8_t *key,
@@ -131,10 +127,10 @@ int chacha20poly1305_crypt(struct chachapolyaead_ctx *ctx, uint32_t seqnr,
   }
   r = 0;
 out:
-  memset_s(expected_tag, sizeof(expected_tag), 0, sizeof(expected_tag));
-  memset_s(seqbuf, sizeof(seqbuf), 0, sizeof(seqbuf));
-  memset_s(&chacha_iv, sizeof(chacha_iv), 0, sizeof(chacha_iv));
-  memset_s(poly_key, sizeof(poly_key), 0, sizeof(poly_key));
+  memory_cleanse(expected_tag, sizeof(expected_tag));
+  memory_cleanse(seqbuf, sizeof(seqbuf));
+  memory_cleanse(&chacha_iv, sizeof(chacha_iv));
+  memory_cleanse(poly_key, sizeof(poly_key));
   return r;
 }
 
