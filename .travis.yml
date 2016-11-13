@@ -28,7 +28,7 @@ matrix:
         compiler: x86_64-w64-mingw32-gcc
 
 script: 
-    - $CC -O0 -g poly1305.c chacha.c tests.c -o test
+    - $CC -O0 -g poly1305.c chacha.c chachapoly_aead.c tests.c -o test
     - if ( [ "${TRAVIS_OS_NAME}" == "linux" ] ) && ( [ "$CC" == "gcc" ] ); then
           valgrind --track-origins=yes --leak-check=full --error-exitcode=1 ./test;
           ./test;
