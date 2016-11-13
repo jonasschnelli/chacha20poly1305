@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jonasschnelli/chacha20poly1305.svg?branch=master)](https://travis-ci.org/jonasschnelli/chacha20poly1305) 
+
 chacha20/poly1305/chacha20poly1305 openssh aead
 =====
 
