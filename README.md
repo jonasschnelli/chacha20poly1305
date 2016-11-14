@@ -23,3 +23,8 @@ Object code:
 Tests:
 
     $ gcc -O3 poly1305.c chacha.c chachapoly_aead.c tests.c -o test
+
+Benchmark:
+
+    $ gcc -O3 poly1305.c chacha.c chachapoly_aead.c bench.c -o bench
+    
