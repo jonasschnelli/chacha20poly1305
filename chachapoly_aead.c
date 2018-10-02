@@ -28,7 +28,6 @@
 #define le64toh(x) letoh64(x)
 
 #elif defined(__WINDOWS__)
-#include <sys/param.h>
 #include <winsock2.h>
 
 #if BYTE_ORDER == LITTLE_ENDIAN
