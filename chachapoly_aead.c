@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 #if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) &&                 \
     !defined(__WINDOWS__)
@@ -129,7 +130,7 @@ int chacha20poly1305_crypt(struct chachapolyaead_ctx *ctx, uint64_t seqnr,
       chacha_ivsetup(&ctx->header_ctx, (uint8_t *)&aad_chacha_nonce_hdr, NULL); // block counter 0
       chacha_encrypt_bytes(&ctx->header_ctx, NULL, ctx->aad_keystream_buffer, CHACHA20_ROUND_OUTPUT);
   }
-  printf("(CRYPT) keystream at pos %d with seq %lld: %d %d %d\n", aad_pos, seqnr, ctx->aad_keystream_buffer[aad_pos+0], ctx->aad_keystream_buffer[aad_pos+1], ctx->aad_keystream_buffer[aad_pos+2]);
+  printf("(CRYPT) keystream at pos %d with seq %" PRIu64 ": %d %d %d\n", aad_pos, seqnr, ctx->aad_keystream_buffer[aad_pos+0], ctx->aad_keystream_buffer[aad_pos+1], ctx->aad_keystream_buffer[aad_pos+2]);
   // crypt the AAD (3 byte length)
   dest[0] = XOR(src[0], ctx->aad_keystream_buffer[aad_pos+0]);
   dest[1] = XOR(src[1], ctx->aad_keystream_buffer[aad_pos+1]);
@@ -175,7 +176,7 @@ int chacha20poly1305_get_length(struct chachapolyaead_ctx *ctx,
              XOR(ciphertext[1], ctx->aad_keystream_buffer[pos+1]) << 8 |
              XOR(ciphertext[2], ctx->aad_keystream_buffer[pos+2]) << 16;
 
-  printf("(LENGTH) keystream at pos %d with seq %lld: %d %d %d\n", pos, seqnr, ctx->aad_keystream_buffer[pos+0], ctx->aad_keystream_buffer[pos+1], ctx->aad_keystream_buffer[pos+2]);
+  printf("(LENGTH) keystream at pos %d with seq %" PRIu64 ": %d %d %d\n", pos, seqnr, ctx->aad_keystream_buffer[pos+0], ctx->aad_keystream_buffer[pos+1], ctx->aad_keystream_buffer[pos+2]);
   printf("(LENGTH) m: %d %d %d   <->  c: %d %d %d\n", (uint8_t)len_out[0], (uint8_t)len_out[1], (uint8_t)len_out[2], ciphertext[0], ciphertext[1], ciphertext[2]);
   /* convert to host endianness 32bit integer (only 24bit though) */
   *len_out = le32toh(*len_out);
