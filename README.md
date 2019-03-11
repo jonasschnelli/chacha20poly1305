@@ -14,13 +14,13 @@ Build steps
 
 Object code:
 
-    $ gcc -O3 -c poly1305.c chacha.c chachapoly_aead.c
+    $ gcc -lm -O3 -c poly1305.c chacha.c chachapoly_aead.c
 
 Tests:
 
-    $ gcc -O3 poly1305.c chacha.c chachapoly_aead.c tests.c -o test
+    $ gcc -lm -O3 poly1305.c chacha.c chachapoly_aead.c tests.c -o test
 
 Benchmark:
 
-    $ gcc -O3 poly1305.c chacha.c chachapoly_aead.c bench.c -o bench
+    $ gcc -lm -O3 poly1305.c chacha.c chachapoly_aead.c bench.c -o bench
     
