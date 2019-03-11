@@ -1,4 +1,5 @@
 language: c
+dist: xenial
 os:
     - osx
     - linux
@@ -18,7 +19,7 @@ addons:
 
 before_install:
     - pip install --user cpp-coveralls
-    - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install gnu-sed --default-names; fi
+    - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install gnu-sed; fi
 
 matrix:
     fast_finish:
