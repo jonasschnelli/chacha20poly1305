@@ -110,9 +110,12 @@ void chacha_encrypt_bytes(chacha_ctx *x, const u8 *m, u8 *c, u32 bytes) {
 
   for (;;) {
     if (bytes < 64) {
-      for (i = 0; i < bytes; ++i)
-        tmp[i] = m[i];
-      m = tmp;
+      if (m != NULL) {
+        for (i = 0; i < bytes; ++i) {
+          tmp[i] = m[i];
+        }
+        m = tmp;
+      }
       ctarget = c;
       c = tmp;
     }
@@ -159,23 +162,24 @@ void chacha_encrypt_bytes(chacha_ctx *x, const u8 *m, u8 *c, u32 bytes) {
     x14 = PLUS(x14, j14);
     x15 = PLUS(x15, j15);
 
-    x0 = XOR(x0, U8TO32_LITTLE(m + 0));
-    x1 = XOR(x1, U8TO32_LITTLE(m + 4));
-    x2 = XOR(x2, U8TO32_LITTLE(m + 8));
-    x3 = XOR(x3, U8TO32_LITTLE(m + 12));
-    x4 = XOR(x4, U8TO32_LITTLE(m + 16));
-    x5 = XOR(x5, U8TO32_LITTLE(m + 20));
-    x6 = XOR(x6, U8TO32_LITTLE(m + 24));
-    x7 = XOR(x7, U8TO32_LITTLE(m + 28));
-    x8 = XOR(x8, U8TO32_LITTLE(m + 32));
-    x9 = XOR(x9, U8TO32_LITTLE(m + 36));
-    x10 = XOR(x10, U8TO32_LITTLE(m + 40));
-    x11 = XOR(x11, U8TO32_LITTLE(m + 44));
-    x12 = XOR(x12, U8TO32_LITTLE(m + 48));
-    x13 = XOR(x13, U8TO32_LITTLE(m + 52));
-    x14 = XOR(x14, U8TO32_LITTLE(m + 56));
-    x15 = XOR(x15, U8TO32_LITTLE(m + 60));
-
+    if (m != NULL) {
+      x0 = XOR(x0, U8TO32_LITTLE(m + 0));
+      x1 = XOR(x1, U8TO32_LITTLE(m + 4));
+      x2 = XOR(x2, U8TO32_LITTLE(m + 8));
+      x3 = XOR(x3, U8TO32_LITTLE(m + 12));
+      x4 = XOR(x4, U8TO32_LITTLE(m + 16));
+      x5 = XOR(x5, U8TO32_LITTLE(m + 20));
+      x6 = XOR(x6, U8TO32_LITTLE(m + 24));
+      x7 = XOR(x7, U8TO32_LITTLE(m + 28));
+      x8 = XOR(x8, U8TO32_LITTLE(m + 32));
+      x9 = XOR(x9, U8TO32_LITTLE(m + 36));
+      x10 = XOR(x10, U8TO32_LITTLE(m + 40));
+      x11 = XOR(x11, U8TO32_LITTLE(m + 44));
+      x12 = XOR(x12, U8TO32_LITTLE(m + 48));
+      x13 = XOR(x13, U8TO32_LITTLE(m + 52));
+      x14 = XOR(x14, U8TO32_LITTLE(m + 56));
+      x15 = XOR(x15, U8TO32_LITTLE(m + 60));
+    }
     j12 = PLUSONE(j12);
     if (!j12) {
       j13 = PLUSONE(j13);
@@ -210,6 +214,8 @@ void chacha_encrypt_bytes(chacha_ctx *x, const u8 *m, u8 *c, u32 bytes) {
     }
     bytes -= 64;
     c += 64;
-    m += 64;
+    if (m != NULL) {
+      m += 64;
+    }
   }
 }

@@ -1,17 +1,13 @@
 [![Build Status](https://travis-ci.org/jonasschnelli/chacha20poly1305.svg?branch=master)](https://travis-ci.org/jonasschnelli/chacha20poly1305) 
 
-chacha20/poly1305/chacha20poly1305 openssh aead
+chacha20poly1305@bitcoin AEAD
 =====
 
-Simple C module for chacha20, poly1305 and chacha20poly1305@openssh AEAD
+Simple C module for ChaCha20Poly1305@bitcoin AEAD
 
 Features:
 * Simple, pure C code without any dependencies.
 
-Performance
------------
-
--
 
 Build steps
 -----------
