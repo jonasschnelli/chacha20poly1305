@@ -2,7 +2,6 @@
 
 #define __STDC_WANT_LIB_EXT1__ 1
 #include "poly1305.h"
-#include <math.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -123,7 +122,7 @@ int chacha20poly1305_crypt(struct chachapolyaead_ctx *ctx, uint64_t seqnr,
 
 // add AAD (encrypted length)
   aad_pos = seqnr % AAD_PACKAGES_PER_ROUND * CHACHA20_POLY1305_AEAD_AAD_LEN; // the current position in the keystream
-  seqnr = floor(seqnr / (float)AAD_PACKAGES_PER_ROUND); // 21 x 3byte length packages fits in a ChaCha20 round
+  seqnr = seqnr / AAD_PACKAGES_PER_ROUND; // 21 x 3byte length packages fits in a ChaCha20 round
   if (ctx->cached_aad_seqnr != seqnr) {
       ctx->cached_aad_seqnr = seqnr;
       aad_chacha_nonce_hdr = htole64(seqnr);
@@ -161,7 +160,7 @@ int chacha20poly1305_get_length(struct chachapolyaead_ctx *ctx,
   uint8_t buf[3], seqbuf[8];
 
   int pos = seqnr % AAD_PACKAGES_PER_ROUND * CHACHA20_POLY1305_AEAD_AAD_LEN;
-  seqnr = floor(seqnr / (float)AAD_PACKAGES_PER_ROUND); /* 21 x 3byte length packages fits in a ChaCha20 round */
+  seqnr = seqnr / (float)AAD_PACKAGES_PER_ROUND; /* 21 x 3byte length packages fits in a ChaCha20 round */
   if (ctx->cached_aad_seqnr != seqnr) {
     /* we need to calculate the 64 keystream bytes since we reached a new sequence number */
     ctx->cached_aad_seqnr = seqnr;

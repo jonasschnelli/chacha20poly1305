@@ -18,7 +18,7 @@ Object code:
 
 Tests:
 
-    $ gcc -lm -O3 poly1305.c chacha.c chachapoly_aead.c tests.c -o test
+    $ gcc -O3 poly1305.c chacha.c chachapoly_aead.c tests.c -o test
 
 Benchmark:
 
