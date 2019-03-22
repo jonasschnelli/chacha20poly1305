@@ -129,7 +129,7 @@ static void bench_chacha20poly1305_crypt(void *data) {
 
   uint8_t buffer[BUFFER_SIZE + 16];
   for (i = 0; i < 30; i++) {
-    chacha20poly1305_crypt(ctx, seqnr, buffer, buffer, BUFFER_SIZE - 3, 1);
+    chacha20poly1305_crypt(ctx, seqnr, seqnr, 0, buffer, BUFFER_SIZE+16, buffer, BUFFER_SIZE, 1);
   }
 }
 

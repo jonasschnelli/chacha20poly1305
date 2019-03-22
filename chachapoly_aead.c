@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) &&                 \
+#if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && \
     !defined(__WINDOWS__)
 #define __WINDOWS__
 #endif
@@ -95,15 +95,23 @@ int chacha20poly1305_init(struct chachapolyaead_ctx *ctx, const uint8_t *k_1,
   return 0;
 }
 
-int chacha20poly1305_crypt(struct chachapolyaead_ctx *ctx, uint64_t seqnr,
-                           uint8_t *dest, const uint8_t *src, uint32_t len,
+int chacha20poly1305_crypt(struct chachapolyaead_ctx *ctx, uint64_t seqnr, uint64_t seqnr_aad,
+                           int pos_aad, 
+                           uint8_t *dest, size_t dest_len, const uint8_t *src, size_t src_len,
                            int is_encrypt) {
-  uint8_t seqbuf[8];
   const uint8_t one[8] = {1, 0, 0, 0, 0, 0, 0, 0}; /* NB little-endian */
   uint64_t aad_chacha_nonce_hdr = 0;
   uint8_t expected_tag[POLY1305_TAGLEN], poly_key[POLY1305_KEYLEN];
   int r = -1;
   int aad_pos = 0;
+
+  if (
+    // if we encrypt, make sure the source contains at least the expected AAD and the destination has at least space for the source + MAC
+    (is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN || dest_len < src_len + POLY1305_TAGLEN)) ||
+    // if we decrypt, make sure the source contains at least the expected AAD+MAC and the destination has at least space for the source - MAc
+    (!is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN || dest_len < src_len - POLY1305_TAGLEN))) {
+    return r;
+  }
 
   uint64_t chacha_iv = htole64(seqnr);
   memset(poly_key, 0, sizeof(poly_key));
@@ -111,44 +119,39 @@ int chacha20poly1305_crypt(struct chachapolyaead_ctx *ctx, uint64_t seqnr,
   chacha_encrypt_bytes(&ctx->main_ctx, poly_key, poly_key, sizeof(poly_key));
 
   if (!is_encrypt) {
-    const uint8_t *tag = src + CHACHA20_POLY1305_AEAD_AAD_LEN + len;
+    const uint8_t *tag = src + src_len - POLY1305_TAGLEN;
 
-    poly1305_auth(expected_tag, src, CHACHA20_POLY1305_AEAD_AAD_LEN + len, poly_key);
+    poly1305_auth(expected_tag, src, src_len - POLY1305_TAGLEN, poly_key);
     if (timingsafe_bcmp(expected_tag, tag, POLY1305_TAGLEN) != 0) {
-      r = -1;
       goto out;
     }
+    /* MAC has been successfully verified, make sure we don't covert it in decryption */
+    src_len -= POLY1305_TAGLEN;
   }
 
-// add AAD (encrypted length)
-  aad_pos = seqnr % AAD_PACKAGES_PER_ROUND * CHACHA20_POLY1305_AEAD_AAD_LEN; // the current position in the keystream
-  seqnr = seqnr / AAD_PACKAGES_PER_ROUND; // 21 x 3byte length packages fits in a ChaCha20 round
-  if (ctx->cached_aad_seqnr != seqnr) {
-      ctx->cached_aad_seqnr = seqnr;
-      aad_chacha_nonce_hdr = htole64(seqnr);
+  /* add AAD (encrypted length) */
+  if (ctx->cached_aad_seqnr != seqnr_aad) {
+      ctx->cached_aad_seqnr = seqnr_aad;
+      aad_chacha_nonce_hdr = htole64(seqnr_aad);
       chacha_ivsetup(&ctx->header_ctx, (uint8_t *)&aad_chacha_nonce_hdr, NULL); // block counter 0
       chacha_encrypt_bytes(&ctx->header_ctx, NULL, ctx->aad_keystream_buffer, CHACHA20_ROUND_OUTPUT);
   }
-  printf("(CRYPT) keystream at pos %d with seq %" PRIu64 ": %d %d %d\n", aad_pos, seqnr, ctx->aad_keystream_buffer[aad_pos+0], ctx->aad_keystream_buffer[aad_pos+1], ctx->aad_keystream_buffer[aad_pos+2]);
-  // crypt the AAD (3 byte length)
+  /* crypt the AAD (3 byte length) */
   dest[0] = XOR(src[0], ctx->aad_keystream_buffer[aad_pos+0]);
   dest[1] = XOR(src[1], ctx->aad_keystream_buffer[aad_pos+1]);
   dest[2] = XOR(src[2], ctx->aad_keystream_buffer[aad_pos+2]);
 
-  printf("(CRYPT) m: %d %d %d   <->   c: %d %d %d\n", (uint8_t)src[0], (uint8_t)src[1], (uint8_t)src[2], dest[0], dest[1], dest[2]);
-
-  /* Set Chacha's block counter to 1 */
+  /* Set Chacha's block counter to 1 and encipher */
   chacha_ivsetup(&ctx->main_ctx, (uint8_t *)&chacha_iv, one);
-  chacha_encrypt_bytes(&ctx->main_ctx, src + CHACHA20_POLY1305_AEAD_AAD_LEN, dest + CHACHA20_POLY1305_AEAD_AAD_LEN, len);
+  chacha_encrypt_bytes(&ctx->main_ctx, src + CHACHA20_POLY1305_AEAD_AAD_LEN, dest + CHACHA20_POLY1305_AEAD_AAD_LEN, src_len - CHACHA20_POLY1305_AEAD_AAD_LEN);
 
   /* If encrypting, calculate and append tag */
   if (is_encrypt) {
-    poly1305_auth(dest + CHACHA20_POLY1305_AEAD_AAD_LEN + len, dest, CHACHA20_POLY1305_AEAD_AAD_LEN + len, poly_key);
+    poly1305_auth(dest + src_len, dest, src_len, poly_key);
   }
   r = 0;
 out:
   memory_cleanse(expected_tag, sizeof(expected_tag));
-  memory_cleanse(seqbuf, sizeof(seqbuf));
   memory_cleanse(&chacha_iv, sizeof(chacha_iv));
   memory_cleanse(poly_key, sizeof(poly_key));
   return r;
@@ -175,8 +178,6 @@ int chacha20poly1305_get_length(struct chachapolyaead_ctx *ctx,
              XOR(ciphertext[1], ctx->aad_keystream_buffer[pos+1]) << 8 |
              XOR(ciphertext[2], ctx->aad_keystream_buffer[pos+2]) << 16;
 
-  printf("(LENGTH) keystream at pos %d with seq %" PRIu64 ": %d %d %d\n", pos, seqnr, ctx->aad_keystream_buffer[pos+0], ctx->aad_keystream_buffer[pos+1], ctx->aad_keystream_buffer[pos+2]);
-  printf("(LENGTH) m: %d %d %d   <->  c: %d %d %d\n", (uint8_t)len_out[0], (uint8_t)len_out[1], (uint8_t)len_out[2], ciphertext[0], ciphertext[1], ciphertext[2]);
   /* convert to host endianness 32bit integer (only 24bit though) */
   *len_out = le32toh(*len_out);
   return 0;

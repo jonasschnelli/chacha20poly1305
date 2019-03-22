@@ -17,8 +17,9 @@ struct chachapolyaead_ctx {
 
 int chacha20poly1305_init(struct chachapolyaead_ctx *cpctx, const uint8_t *k_1,
                           int k_1_len, const uint8_t *k_2, int k_2_len);
-int chacha20poly1305_crypt(struct chachapolyaead_ctx *ctx, uint64_t seqnr,
-                           uint8_t *dest, const uint8_t *src, uint32_t len,
+int chacha20poly1305_crypt(struct chachapolyaead_ctx *ctx, uint64_t seqnr, uint64_t seqnr_aad,
+                           int pos_aad, 
+                           uint8_t *dest, size_t dest_len, const uint8_t *src, size_t srv_len,
                            int is_encrypt);
 int chacha20poly1305_get_length(struct chachapolyaead_ctx *ctx,
                                 uint32_t *len_out, uint64_t seqnr,
