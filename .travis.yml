@@ -30,7 +30,7 @@ matrix:
 
 script: 
     - $CC -lm -O3 poly1305.c chacha.c chachapoly_aead.c bench.c -o bench
-    - rm *.o
+    - rm -f *.o
     - $CC -lm -O0 -g poly1305.c chacha.c chachapoly_aead.c tests.c -o test
     - if ( [ "${TRAVIS_OS_NAME}" == "linux" ] ) && ( [ "$CC" == "gcc" ] ); then
           valgrind --track-origins=yes --leak-check=full --error-exitcode=1 ./test;
