@@ -1,4 +1,8 @@
-#include "sys/time.h"
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <sys/time.h>
+#endif
 #include <math.h>
 #include <stdio.h>
 
@@ -16,7 +20,7 @@ static const uint8_t testnonce[32] = {0x00, 0x01, 0x02, 0x03,
 static const uint8_t testdata[12] = {0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20,
     0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21};
 
-static const uint64_t BUFFER_SIZE = 1000 * 1000;
+#define BUFFER_SIZE  (1000 * 1000)
 
 static const uint8_t aead_keys[64] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
